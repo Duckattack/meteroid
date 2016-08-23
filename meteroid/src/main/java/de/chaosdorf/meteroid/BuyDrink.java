@@ -57,13 +57,14 @@ public class BuyDrink extends BookingActivity
             }
         });
 
+
         final Button transferButton = (Button) findViewById(R.id.button_transfer_money);
         transferButton.setOnClickListener(new View.OnClickListener()
         {
             public void onClick(View view)
             {
                 FragmentManager fm = getSupportFragmentManager();
-                DialogFragment dialogFragment = new MoneyDialogFragment();
+                DialogFragment dialogFragment = new MoneyDialogFragment(MoneyDialogType.TRANSFER);
                 dialogFragment.show(fm, "Transfer money");
             }
         });
@@ -81,8 +82,9 @@ public class BuyDrink extends BookingActivity
     public void onUserSelectAmount(double amount) {
         BuyableItem buyableItem = new Money(amount + " Euro", "euro_" + amount, amount);
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        prefs.edit().putLong("amount", (long) amount).apply();
-        doBooking(buyableItem);
+        prefs.edit().putFloat("amount", (float) amount).apply();
+        prefs.edit().putInt("src_user_id", user.getId()).apply();
+        // doBooking(buyableItem);
         Utility.resetUsername(activity);
         Utility.startActivity(activity, PickUsernameTransfer.class);
     }

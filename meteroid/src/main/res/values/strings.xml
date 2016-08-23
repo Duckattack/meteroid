@@ -63,6 +63,13 @@
     <string name="deposit_money_label">Deposit money</string>
     <string name="deposit_money_amount_label">Amount to deposit:</string>
 
+    <!-- Transfer -->
+    <string name="transfer_failed">Transfer failed.</string>
+    <string name="transfer_success">Transfer of %.02f units to target account successful.</string>
+    <string name="transfer_money_amount_label">User to user transfer</string>
+    <string name="transfer_money_label">Transfer money</string>
+
+
     <!-- Buttons -->
     <string name="button_back">Back</string>
     <string name="button_reload">Reload</string>

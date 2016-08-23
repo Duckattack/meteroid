@@ -40,12 +40,17 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.apache.http.message.BasicNameValuePair;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import de.chaosdorf.meteroid.controller.UserController;
 import de.chaosdorf.meteroid.longrunningio.LongRunningIOCallback;
 import de.chaosdorf.meteroid.longrunningio.LongRunningIOGet;
 import de.chaosdorf.meteroid.longrunningio.LongRunningIOTask;
+import de.chaosdorf.meteroid.longrunningio.LongRunningIOPost;
+
 import de.chaosdorf.meteroid.model.BuyableItem;
 import de.chaosdorf.meteroid.model.User;
 import de.chaosdorf.meteroid.util.Utility;
@@ -132,16 +137,50 @@ public class PickUsernameTransfer extends Activity implements LongRunningIOCallb
 			gridView.setAdapter(userAdapter);
 			gridView.setOnItemClickListener(this);
 		}
+		if (task == LongRunningIOTask.MAKE_TRANSFER) {
+			// Check if transfer was successful
+			prefs = PreferenceManager.getDefaultSharedPreferences(this);
+			float amount = prefs.getFloat("amount",0);
+			int srcUserId = prefs.getInt("src_user_id",0);
+
+			// Inform user of successful transfer
+			Utility.displayToastMessage(activity,
+					String.format(
+							getResources().getString(R.string.transfer_success),
+							amount
+					)
+			);
+
+			// Go back to user
+			prefs.edit().putInt("userid", srcUserId).apply();
+			Utility.startActivity(activity, BuyDrink.class);
+		}
 	}
 
 	@Override
 	public void onItemClick(final AdapterView<?> adapterView, final View view, final int index, final long l)
 	{
-		final User user = (User) gridView.getItemAtPosition(index);
-		if (user != null && user.getName() != null)
+
+		final User dstUser = (User) gridView.getItemAtPosition(index);
+		if (dstUser != null && dstUser.getName() != null)
 		{
 			prefs = PreferenceManager.getDefaultSharedPreferences(this);
-			new LongRunningIOGet(this, LongRunningIOTask.PAY_DRINK, hostname + "users/" + user.getId() + "/deposit?amount=" + (prefs.getLong("amount", 0))).execute();
+			float amount = prefs.getFloat("amount",0);
+			int srcUserId = prefs.getInt("src_user_id",0);
+
+			// only transfer absolute values. Don't steal money.
+			amount = Math.abs(amount);
+
+			// Make POST payload
+			final List<BasicNameValuePair> payload = new ArrayList<BasicNameValuePair>();
+			payload.add(new BasicNameValuePair("dst_user_id", String.valueOf(dstUser.getId())));
+			payload.add(new BasicNameValuePair("src_user_id", String.valueOf(srcUserId)));
+			payload.add(new BasicNameValuePair("amount", String.valueOf(amount)));
+
+			new LongRunningIOPost(
+					this, LongRunningIOTask.MAKE_TRANSFER, hostname + "transfers.json",
+					payload
+			).execute();
 		}
 	}
 

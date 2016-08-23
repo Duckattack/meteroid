@@ -57,7 +57,7 @@ public class DepositMoney extends BookingActivity
             public void onClick(View view)
             {
                 FragmentManager fm = getSupportFragmentManager();
-                DialogFragment dialogFragment = new MoneyDialogFragment();
+                DialogFragment dialogFragment = new MoneyDialogFragment(MoneyDialogType.DEPOSIT);
                 dialogFragment.show(fm, "Deposit money");
             }
         });

@@ -77,8 +77,8 @@ abstract public class BookingActivity extends FragmentActivity implements LongRu
     protected GridView gridView = null;
     protected ListView listView = null;
 
-    private int userID = 0;
-    private User user;
+    protected int userID = 0;
+    protected User user;
 
     protected boolean useGridView;
     private boolean multiUserMode;
@@ -241,23 +241,19 @@ abstract public class BookingActivity extends FragmentActivity implements LongRu
                         if (user != null) {
                             final TextView balance = (TextView) findViewById(R.id.balance);
                             balance.setText(DECIMAL_FORMAT.format(user.getBalance() - buyableItem.getDonationRecommendation()));
+
+                            // Update user information
+                            new LongRunningIOGet(this, LongRunningIOTask.GET_USER, hostname + "users/" + userID + ".json").execute();
                         }
                         if (multiUserMode) {
                             if (buyableItem.isDrink()) {
                                 Utility.startActivity(activity, PickUsername.class);
-                                break;
                             } else {
                                 Utility.startActivity(activity, BuyDrink.class);
-                                break;
                             }
                         }
 
-                        if (buyableItem.isDrink()) {
-                            new LongRunningIOPost(this, LongRunningIOTask.PAY_DRINK, hostname + "users/" + userID + "/purchase.json",
-                                    DrinkController.drinkIdToPostParams((Drink) buyableItem)).execute();
-                        } else {
-                            new LongRunningIOGet(this, LongRunningIOTask.PAY_DRINK, hostname + "users/" + userID + ".json").execute();
-                        }
+
                         break;
                     }
                 }
@@ -280,7 +276,21 @@ abstract public class BookingActivity extends FragmentActivity implements LongRu
     protected void doBooking(BuyableItem buyableItem) {
         if (buyableItem != null) {
             buyingItem.set(buyableItem);
-            new LongRunningIOGet(this, LongRunningIOTask.PAY_DRINK, hostname + "users/" + userID + "/deposit?amount=" + (-buyableItem.getDonationRecommendation())).execute();
+
+            if (buyableItem.isDrink()) { // Purchase a drink using the new API
+                new LongRunningIOPost(
+                        this, LongRunningIOTask.PAY_DRINK, hostname + "users/" + userID + "/purchase.json",
+                        DrinkController.drinkIdToPostParams((Drink) buyableItem)
+                ).execute();
+            }
+            else { // When buying "Money"
+                new LongRunningIOGet(
+                        this, LongRunningIOTask.PAY_DRINK,
+                        hostname + "users/" + userID + "/deposit?amount=" + (-buyableItem.getDonationRecommendation())
+                ).execute();
+
+            }
+
         }
     }
 
